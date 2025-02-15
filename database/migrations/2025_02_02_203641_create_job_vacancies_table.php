@@ -28,6 +28,8 @@ return new class extends Migration {
             // Foreign key constraints
             $table->foreign('companyId')->references('id')->on('companies')->onDelete('restrict');
             $table->foreign('categoryId')->references('id')->on('job_categories')->onDelete('restrict');
+
+            $table->softDeletes();
         });
     }
 

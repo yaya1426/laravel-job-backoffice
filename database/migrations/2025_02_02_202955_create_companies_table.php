@@ -23,8 +23,10 @@ return new class extends Migration {
             // Foreign keys
             $table->uuid('ownerId');
 
-            // Foreign key constraint (onDelete cascade for related user deletion)
-            $table->foreign('ownerId')->references('id')->on('users')->onDelete('cascade');
+            // Foreign key constraint
+            $table->foreign('ownerId')->references('id')->on('users')->onDelete('restrict');
+
+            $table->softDeletes();
         });
     }
 

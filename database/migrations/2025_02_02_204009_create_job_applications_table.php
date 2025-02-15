@@ -28,6 +28,8 @@ return new class extends Migration {
             $table->foreign('jobId')->references('id')->on('job_vacancies')->onDelete('restrict');
             $table->foreign('resumeId')->references('id')->on('resumes')->onDelete('restrict');
             $table->foreign('userId')->references('id')->on('users')->onDelete('restrict');
+
+            $table->softDeletes();
         });
     }
 

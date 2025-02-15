@@ -28,6 +28,8 @@ return new class extends Migration {
 
             // Foreign key constraint with cascading delete
             $table->foreign('userId')->references('id')->on('users')->onDelete('restrict');
+
+            $table->softDeletes();
         });
     }
 

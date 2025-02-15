@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Companies Management
     Route::resource('company', CompanyController::class);
+    Route::post('/companies/{id}/restore', [CompanyController::class, 'restore'])->name('company.restore');
 
     // Applications Management
     Route::resource('application', ApplicationController::class);

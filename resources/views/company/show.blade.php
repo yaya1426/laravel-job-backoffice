@@ -13,7 +13,7 @@
             </a>
         </div>
 
-        <div class="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow">
+        <div class="w-full mx-auto p-6 bg-white rounded-lg shadow">
             <!-- Company Details -->
             <div class="mb-6">
                 <h3 class="text-lg font-bold">Company Information</h3>
@@ -38,8 +38,8 @@
                     onsubmit="return confirm('Are you sure you want to delete this company?');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                        Delete
+                    <button type="submit" class="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700">
+                        Archive
                     </button>
                 </form>
             </div>

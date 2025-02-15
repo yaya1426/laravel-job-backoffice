@@ -1,24 +1,28 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Add Company') }}
+            {{ __('Edit Company') }}
         </h2>
     </x-slot>
 
     <div class="overflow-x-auto p-6">
         <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
-            <form action="{{ route('company.store') }}" method="POST">
+            <form action="{{ route('company.update', $company->id) }}" method="POST">
                 @csrf
+                @method('PUT')
+
+                <input type="hidden" name="id" value="{{ $company->id }}" />
+
 
                 <!-- Company Details Section -->
                 <div class="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Company Details</h3>
-                    <h4 class="text-sm font-semibold text-gray-600 mb-4">Enter the company details</h4>
+
                     <!-- Company Name -->
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium text-gray-900">Company Name</label>
                         <div class="mt-2">
-                            <input type="text" name="name" id="name" value="{{ old('name') }}"
+                            <input type="text" name="name" id="name" value="{{ old('name', $company->name) }}"
                                 class="{{ $errors->has('name') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
                         </div>
                         @error('name')
@@ -30,7 +34,8 @@
                     <div class="mb-4">
                         <label for="address" class="block text-sm font-medium text-gray-900">Address</label>
                         <div class="mt-2">
-                            <input type="text" name="address" id="address" value="{{ old('address') }}"
+                            <input type="text" name="address" id="address"
+                                value="{{ old('address', $company->address) }}"
                                 class="{{ $errors->has('address') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
                         </div>
                         @error('address')
@@ -46,7 +51,7 @@
                                 class="{{ $errors->has('industry') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
                                 <option value="">Select Industry</option>
                                 @foreach ($industries as $industry)
-                                    <option value="{{ $industry }}" {{ old('industry') == $industry ? 'selected' : '' }}>
+                                    <option value="{{ $industry }}" {{ old('industry', $company->industry) == $industry ? 'selected' : '' }}>
                                         {{ $industry }}
                                     </option>
                                 @endforeach
@@ -61,7 +66,8 @@
                     <div class="mb-4">
                         <label for="website" class="block text-sm font-medium text-gray-900">Website (optional)</label>
                         <div class="mt-2">
-                            <input type="url" name="website" id="website" value="{{ old('website') }}"
+                            <input type="url" name="website" id="website"
+                                value="{{ old('website', $company->website) }}"
                                 class="{{ $errors->has('website') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
                         </div>
                         @error('website')
@@ -73,36 +79,30 @@
                 <!-- Company Owner Section -->
                 <div class="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Company Owner</h3>
-                    <h4 class="text-sm font-semibold text-gray-600 mb-4">Register a new company owner user and assign it
-                        to the company</h4>
-                    <!-- Owner Name -->
+
+                    <!-- Owner Name (Read-Only) -->
                     <div class="mb-4">
                         <label for="owner_name" class="block text-sm font-medium text-gray-900">Owner Name</label>
                         <div class="mt-2">
-                            <input type="text" name="owner_name" id="owner_name" value="{{ old('owner_name') }}"
-                                class="{{ $errors->has('owner_name') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
+                            <input type="text" id="owner_name" value="{{ $company->owner->name }}" disabled
+                                class="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-base text-gray-500 outline outline-1 placeholder:text-gray-400 cursor-not-allowed">
                         </div>
-                        @error('owner_name')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
-                        @enderror
                     </div>
 
-                    <!-- Owner Email -->
+                    <!-- Owner Email (Read-Only) -->
                     <div class="mb-4">
                         <label for="owner_email" class="block text-sm font-medium text-gray-900">Owner Email</label>
                         <div class="mt-2">
-                            <input type="email" name="owner_email" id="owner_email" value="{{ old('owner_email') }}"
-                                class="{{ $errors->has('owner_email') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
+                            <input type="email" id="owner_email" value="{{ $company->owner->email }}" disabled
+                                class="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-base text-gray-500 outline outline-1 placeholder:text-gray-400 cursor-not-allowed">
                         </div>
-                        @error('owner_email')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
-                        @enderror
                     </div>
-
-                    <!-- Owner Password -->
+                    
+                    <!-- Owner Password (Optional) -->
                     <div class="mb-4 relative" x-data="{ show: false }">
-                        <label for="owner_password" class="block text-sm font-medium text-gray-900">Owner
-                            Password</label>
+                        <label for="owner_password" class="block text-sm font-medium text-gray-900">
+                            Change Owner Password (Optional)
+                        </label>
 
                         <div class="relative">
                             <input type="password" name="owner_password" id="owner_password"
@@ -112,6 +112,7 @@
                             <!-- Eye Icon for Show/Hide Password -->
                             <button type="button" class="absolute inset-y-0 right-2 flex items-center text-gray-500"
                                 @click="show = !show">
+                                <!-- Eye Open Icon (Password Visible) -->
                                 <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -120,6 +121,7 @@
                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
                                 </svg>
 
+                                <!-- Eye Closed Icon (Password Hidden) -->
                                 <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -144,7 +146,7 @@
                         Cancel
                     </a>
                     <button type="submit" class="px-4 py-2 bg-black text-white rounded hover:bg-neutral-800">
-                        Create Company
+                        Update Company
                     </button>
                 </div>
             </form>

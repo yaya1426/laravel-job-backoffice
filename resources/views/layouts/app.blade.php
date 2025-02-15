@@ -26,12 +26,13 @@
         <div class="flex-1 min-h-screen bg-gray-100">
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-4 px-4">
+                <header class="bg-white shadow w-full">
+                    <div class="w-full py-4 px-4">
                         {{ $header }}
                     </div>
                 </header>
             @endisset
+
 
             <!-- Page Content -->
             <main>

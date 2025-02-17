@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Http\Requests\CompanyCreateRequest;
 use App\Http\Requests\CompanyUpdateRequest;
 use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\User;
-use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -154,6 +154,13 @@ class CompanyController extends Controller
                 ]);
             }
 
+            print_r($request->query('redirectToList'));
+
+            if ($request->query('redirectToList') == 'false') {
+                return redirect()->route('company.show', ['company' => $company->id])
+                    ->with('success', 'Company updated successfully.');
+            }
+
             return redirect()->route('company.index')->with('success', 'Company updated successfully.');
         } catch (QueryException $e) {
             return redirect()->route('company.index')->with('error', 'An error occurred while updating the company.');
@@ -171,12 +178,9 @@ class CompanyController extends Controller
             $company = Company::findOrFail($id);
             $company->delete();
 
-            return redirect()->route('company.index')->with('success', 'Company deleted successfully.');
+            return redirect()->route('company.index')->with('success', 'Company archived successfully.');
         } catch (QueryException $e) {
-            if ($e->getCode() == 23000) {
-                return redirect()->route('company.index')->with('error', 'Cannot delete this company because it has associated job vacancies.');
-            }
-            return redirect()->route('company.index')->with('error', 'An error occurred while deleting the company.');
+            return redirect()->route('company.index')->with('error', 'An error occurred while archiving the company.');
         } catch (Exception $e) {
             return redirect()->route('company.index')->with('error', 'An unexpected error occurred.');
         }

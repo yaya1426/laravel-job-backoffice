@@ -1,12 +1,31 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Applications') }}
+            {{ __('Job Applications') }}
         </h2>
     </x-slot>
 
     <div class="overflow-x-auto p-6">
-        <table class="min-w-full bg-white rounded-lg shadow">
+        <x-toast-notification />
+        <!-- Tabs for Active and Archived Applications -->
+        <div class="flex justify-between items-center pb-2 border-b">
+            <div class="flex space-x-4">
+                <!-- Active Applications Tab -->
+                <a href="{{ route('application.index', ['archived' => 'false']) }}"
+                    class="px-4 py-2 rounded-lg {{ request('archived') !== 'true' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Active Applications
+                </a>
+
+                <!-- Archived Applications Tab -->
+                <a href="{{ route('application.index', ['archived' => 'true']) }}"
+                    class="px-4 py-2 rounded-lg {{ request('archived') === 'true' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Archived
+                </a>
+            </div>
+        </div>
+
+        <!-- Applications Table -->
+        <table class="min-w-full bg-white rounded-lg shadow mt-4">
             <thead>
                 <tr>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600">Applicant</th>
@@ -17,70 +36,66 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Row 1 -->
-                <tr class="border-b">
-                    <td class="px-6 py-4 text-gray-800">John Doe</td>
-                    <td class="px-6 py-4 text-gray-600">Software Engineer</td>
-                    <td class="px-6 py-4 text-gray-600">Acme Corp</td>
-                    <td class="px-6 py-4 text-yellow-600">Pending</td>
-                    <td class="px-6 py-4">
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            ✏️ <!-- Edit Icon -->
-                        </button>
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            🗑️ <!-- Delete Icon -->
-                        </button>
-                    </td>
-                </tr>
-                <!-- Row 2 -->
-                <tr class="border-b">
-                    <td class="px-6 py-4 text-gray-800">Jane Smith</td>
-                    <td class="px-6 py-4 text-gray-600">Product Manager</td>
-                    <td class="px-6 py-4 text-gray-600">Globex</td>
-                    <td class="px-6 py-4 text-blue-600">Interviewed</td>
-                    <td class="px-6 py-4">
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            ✏️
-                        </button>
-                    </td>
-                </tr>
-                <!-- Row 3 -->
-                <tr class="border-b">
-                    <td class="px-6 py-4 text-gray-800">Bob Johnson</td>
-                    <td class="px-6 py-4 text-gray-600">Data Analyst</td>
-                    <td class="px-6 py-4 text-gray-600">Initech</td>
-                    <td class="px-6 py-4 text-red-600">Rejected</td>
-                    <td class="px-6 py-4">
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            ✏️
-                        </button>
-                    </td>
-                </tr>
-                <!-- Row 4 -->
-                <tr class="border-b">
-                    <td class="px-6 py-4 text-gray-800">Alice Brown</td>
-                    <td class="px-6 py-4 text-gray-600">UX Designer</td>
-                    <td class="px-6 py-4 text-gray-600">Hooli</td>
-                    <td class="px-6 py-4 text-green-600">Hired</td>
-                    <td class="px-6 py-4">
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            ✏️
-                        </button>
-                    </td>
-                </tr>
-                <!-- Row 5 -->
-                <tr>
-                    <td class="px-6 py-4 text-gray-800">Charlie Wilson</td>
-                    <td class="px-6 py-4 text-gray-600">Marketing Specialist</td>
-                    <td class="px-6 py-4 text-gray-600">Umbrella Corp</td>
-                    <td class="px-6 py-4 text-yellow-600">Pending</td>
-                    <td class="px-6 py-4">
-                        <button class="p-2 bg-gray-100 rounded hover:bg-gray-200">
-                            ✏️
-                        </button>
-                    </td>
-                </tr>
+                @forelse ($applications as $application)
+                    <tr class="border-b">
+                        <td class="px-6 py-4 text-gray-800">
+                            @if(request('archived') === 'true')
+                                <span class="text-gray-600">{{ $application->user->name }}</span>
+                            @else
+                                <a href="{{ route('application.show', $application->id) }}"
+                                    class="text-blue-500 underline hover:text-blue-700">
+                                    {{ $application->user->name }}
+                                </a>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy->title }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy->company->name }}</td>
+                        <td class="px-6 py-4 text-gray-600">
+                            <span class="
+                                                @if($application->status === 'pending') text-yellow-600 
+                                                @elseif($application->status === 'interviewed') text-blue-600 
+                                                @elseif($application->status === 'rejected') text-red-600 
+                                                @elseif($application->status === 'hired') text-green-600 
+                                                @endif">
+                                {{ ucfirst($application->status) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                @if(request('archived') === 'true')
+                                    <!-- Restore Button -->
+                                    <form action="{{ route('application.restore', $application->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🔄
+                                            Restore</button>
+                                    </form>
+                                @else
+                                    <!-- Edit Button -->
+                                    <a href="{{ route('application.edit', $application->id) }}"
+                                        class="p-2 bg-gray-100 rounded hover:bg-gray-200">✏️</a>
+
+                                    <!-- Archive Button -->
+                                    <form action="{{ route('application.destroy', $application->id) }}" method="POST"
+                                        onsubmit="return confirm('Are you sure you want to archive this application?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🗃️</button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-600">No job applications found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <div class="mt-4">
+            {{ $applications->links() }}
+        </div>
     </div>
 </x-app-layout>

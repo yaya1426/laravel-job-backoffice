@@ -20,15 +20,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Applications Management
     Route::resource('application', ApplicationController::class);
+    Route::post('application/{id}/restore', [ApplicationController::class, 'restore'])->name('application.restore');
 
     // Categories Management
     Route::resource('category', CategoryController::class);
+    Route::post('category/{id}/restore', [CategoryController::class, 'restore'])->name('category.restore');
 
     // Job Vacancies Management
     Route::resource('job-vacancy', JobVacancyController::class);
+    Route::post('job-vacancy/{id}/restore', [JobVacancyController::class, 'restore'])->name('job-vacancy.restore');
 
     // Users Management
     Route::resource('user', UserController::class);
+    Route::post('user/{id}/restore', [UserController::class, 'restore'])->name('user.restore');
 });
 
 

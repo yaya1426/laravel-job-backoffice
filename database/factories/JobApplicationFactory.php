@@ -14,7 +14,7 @@ class JobApplicationFactory extends Factory
     {
         return [
             'id' => Str::uuid(),
-            'status' => $this->faker->randomElement(['applied', 'reviewed', 'rejected', 'hired']),
+            'status' => $this->faker->randomElement(['pending', 'rejected', 'hired']),
             'aiGeneratedScore' => $this->faker->randomFloat(1, 0, 10),
             'aiGeneratedFeedback' => $this->faker->sentence,
             'jobId' => null,  // Set dynamically

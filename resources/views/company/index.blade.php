@@ -6,18 +6,7 @@
     </x-slot>
 
     <div class="overflow-x-auto p-6">
-        <!-- Flash Messages -->
-        @if(session('success'))
-            <div class="bg-green-50 px-3 py-2">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="bg-red-50 px-3 py-2">
-                {{ session('error') }}
-            </div>
-        @endif
-
+        <x-toast-notification />
         <!-- Tabs for Active and Archived Companies -->
         <div class="flex justify-between items-center pb-2 border-b">
             <div class="flex space-x-4">

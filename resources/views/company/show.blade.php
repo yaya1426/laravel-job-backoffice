@@ -6,10 +6,12 @@
     </x-slot>
 
     <div class="overflow-x-auto p-6">
+        <x-toast-notification />
         <!-- Back Button -->
         <div class="mb-4">
-            <a href="{{ route('company.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                ← Back 
+            <a href="{{ route('company.index') }}"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                ← Back
             </a>
         </div>
 
@@ -30,7 +32,7 @@
 
             <!-- Edit and Delete Buttons -->
             <div class="flex justify-end space-x-2 mb-6">
-                <a href="{{ route('company.edit', $company->id) }}"
+                <a href="{{ route('company.edit', ['company' => $company->id, 'redirectToList' => 'false']) }}"
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Edit
                 </a>
@@ -48,14 +50,14 @@
             <div class="mb-6">
                 <ul class="flex space-x-4">
                     <li>
-                        <a href="{{ route('company.show', ['company' => $company->id, 'tab' => 'jobs']) }}" 
-                           class="px-4 py-2 text-gray-800 font-semibold {{ request('tab') === 'jobs' || request('tab') === null ? 'border-b-2 border-blue-500' : '' }}">
+                        <a href="{{ route('company.show', ['company' => $company->id, 'tab' => 'jobs']) }}"
+                            class="px-4 py-2 text-gray-800 font-semibold {{ request('tab') === 'jobs' || request('tab') === null ? 'border-b-2 border-blue-500' : '' }}">
                             Jobs
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('company.show', ['company' => $company->id, 'tab' => 'applicants']) }}" 
-                           class="px-4 py-2 text-gray-800 font-semibold {{ request('tab') === 'applicants' ? 'border-b-2 border-blue-500' : '' }}">
+                        <a href="{{ route('company.show', ['company' => $company->id, 'tab' => 'applicants']) }}"
+                            class="px-4 py-2 text-gray-800 font-semibold {{ request('tab') === 'applicants' ? 'border-b-2 border-blue-500' : '' }}">
                             Applicants
                         </a>
                     </li>
@@ -88,7 +90,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-600">No applicants for this company.</td>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-600">No applicants for this company.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -113,12 +116,14 @@
                                     <td class="px-6 py-4">{{ ucfirst($job->type) }}</td>
                                     <td class="px-6 py-4">{{ $job->location }}</td>
                                     <td class="px-6 py-4">
-                                        <a href="{{ route('job-vacancy.show', $job->id) }}" class="text-blue-500 underline">View</a>
+                                        <a href="{{ route('job-vacancy.show', $job->id) }}"
+                                            class="text-blue-500 underline">View</a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-600">No jobs available for this company.</td>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-600">No jobs available for this
+                                        company.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('job_applications', function (Blueprint $table) {
             $table->uuid('id')->primary(); // Primary key as UUID
-            $table->enum('status', ['applied', 'reviewed', 'rejected', 'hired']); // Application status
+            $table->enum('status', ['pending', 'rejected', 'hired'])->default('pending'); // Application status
             $table->float('aiGeneratedScore', 3, 1)->default(0); // AI-generated score (0-10)
             $table->text('aiGeneratedFeedback')->nullable(); // AI-generated feedback explaining the score
 

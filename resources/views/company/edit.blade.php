@@ -7,7 +7,7 @@
 
     <div class="overflow-x-auto p-6">
         <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
-            <form action="{{ route('company.update', $company->id) }}" method="POST">
+            <form action="{{ route('company.update', ['company' => $company->id, 'redirectToList' => request('redirectToList')]) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -97,7 +97,7 @@
                                 class="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-base text-gray-500 outline outline-1 placeholder:text-gray-400 cursor-not-allowed">
                         </div>
                     </div>
-                    
+
                     <!-- Owner Password (Optional) -->
                     <div class="mb-4 relative" x-data="{ show: false }">
                         <label for="owner_password" class="block text-sm font-medium text-gray-900">

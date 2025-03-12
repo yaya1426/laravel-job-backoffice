@@ -12,15 +12,11 @@ class JobCategoryFactory extends Factory
 
     public function definition()
     {
+        $categories = json_decode(file_get_contents(database_path('data/job_data.json')), true)['jobCategories'];
+        
         return [
             'id' => Str::uuid(),
-            'name' => $this->faker->unique()->randomElement([
-                'Web Development',
-                'Backend',
-                'Frontend',
-                'Data Science',
-                'DevOps'
-            ]),
+            'name' => $this->faker->unique()->randomElement($categories),
         ];
     }
 }

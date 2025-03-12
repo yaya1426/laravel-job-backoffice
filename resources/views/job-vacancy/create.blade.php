@@ -33,11 +33,11 @@
                         <label for="type" class="block text-sm font-medium text-gray-900">Job Type</label>
                         <div class="mt-2">
                             <select name="type" id="type"
-                                class="{{ $errors->has('type') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
-                                <option value="">Select Job Type</option>
-                                <option value="full-time" {{ old('type') == 'full-time' ? 'selected' : '' }}>Full-Time</option>
-                                <option value="part-time" {{ old('type') == 'part-time' ? 'selected' : '' }}>Part-Time</option>
-                                <option value="remote" {{ old('type') == 'remote' ? 'selected' : '' }}>Remote</option>
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('type') border-red-500 @enderror">
+                                <option value="Full-time" {{ old('type') == 'Full-time' ? 'selected' : '' }}>Full-time</option>
+                                <option value="Contract" {{ old('type') == 'Contract' ? 'selected' : '' }}>Contract</option>
+                                <option value="Remote" {{ old('type') == 'Remote' ? 'selected' : '' }}>Remote</option>
+                                <option value="Hybrid" {{ old('type') == 'Hybrid' ? 'selected' : '' }}>Hybrid</option>
                             </select>
                         </div>
                         @error('type')

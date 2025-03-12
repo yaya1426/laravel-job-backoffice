@@ -1,0 +1,129 @@
+{
+    "jobCategories": [
+        "Frontend Development",
+        "Backend Development",
+        "Full Stack Development",
+        "DevOps Engineering",
+        "Mobile Development",
+        "Cloud Engineering",
+        "Software Architecture"
+    ],
+    "jobTitles": [
+        "Senior Frontend Developer",
+        "Frontend Developer",
+        "Lead Frontend Engineer",
+        "Senior Backend Developer",
+        "Backend Engineer",
+        "Lead Backend Developer",
+        "Full Stack Developer",
+        "Senior Full Stack Engineer",
+        "Lead Full Stack Developer",
+        "DevOps Engineer",
+        "Cloud Infrastructure Engineer",
+        "Software Architect"
+    ],
+    "technologies": {
+        "frontend": [
+            "React.js",
+            "Vue.js",
+            "Angular",
+            "TypeScript",
+            "Next.js",
+            "Tailwind CSS",
+            "JavaScript",
+            "HTML5/CSS3"
+        ],
+        "backend": [
+            "Node.js",
+            "PHP/Laravel",
+            "Python/Django",
+            "Java/Spring Boot",
+            "Go",
+            "Ruby on Rails",
+            ".NET Core"
+        ],
+        "databases": [
+            "PostgreSQL",
+            "MySQL",
+            "MongoDB",
+            "Redis",
+            "Elasticsearch"
+        ],
+        "devops": [
+            "Docker",
+            "Kubernetes",
+            "AWS",
+            "Azure",
+            "CI/CD",
+            "Jenkins",
+            "GitLab"
+        ]
+    },
+    "companies": [
+        {
+            "name": "TechCore Solutions",
+            "industry": "Technology",
+            "description": "Leading software development company specializing in enterprise solutions"
+        },
+        {
+            "name": "Digital Innovate Labs",
+            "industry": "Technology",
+            "description": "Innovation-driven software company focused on cutting-edge technologies"
+        },
+        {
+            "name": "CloudTech Systems",
+            "industry": "Technology",
+            "description": "Cloud-native solutions provider with expertise in scalable architectures"
+        },
+        {
+            "name": "WebStack Technologies",
+            "industry": "Technology",
+            "description": "Full-service web development company delivering modern web solutions"
+        },
+        {
+            "name": "Agile Software Corp",
+            "industry": "Technology",
+            "description": "Agile-first software development company specializing in rapid delivery"
+        }
+    ],
+    "jobDescriptions": {
+        "frontend": "We are seeking a talented Frontend Developer to join our engineering team. You will be responsible for building responsive and interactive user interfaces using modern JavaScript frameworks. The ideal candidate should have strong experience with {technologies} and a passion for creating exceptional user experiences.",
+        "backend": "We're looking for a Backend Developer to design and implement scalable server-side solutions. The role involves working with {technologies} to build robust APIs and maintain high-performance systems. Strong understanding of database design and API architecture is essential.",
+        "fullstack": "We are hiring a Full Stack Developer proficient in both frontend and backend technologies. The ideal candidate will have hands-on experience with {technologies} and be comfortable working across the entire technology stack. You'll be involved in all aspects of development from database design to UI implementation."
+    },
+    "locations": [
+        "Remote",
+        "San Francisco, CA",
+        "New York, NY",
+        "London, UK",
+        "Berlin, Germany",
+        "Amsterdam, Netherlands",
+        "Toronto, Canada",
+        "Singapore",
+        "Dubai, UAE"
+    ],
+    "employmentTypes": [
+        "Full-time",
+        "Contract",
+        "Remote",
+        "Hybrid"
+    ],
+    "salaryRanges": {
+        "junior": {
+            "min": 50000,
+            "max": 80000
+        },
+        "mid": {
+            "min": 80000,
+            "max": 120000
+        },
+        "senior": {
+            "min": 120000,
+            "max": 200000
+        },
+        "lead": {
+            "min": 150000,
+            "max": 250000
+        }
+    }
+} 

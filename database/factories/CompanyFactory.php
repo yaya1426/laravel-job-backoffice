@@ -15,12 +15,15 @@ class CompanyFactory extends Factory
 
     public function definition()
     {
+        $companies = json_decode(file_get_contents(database_path('data/job_data.json')), true)['companies'];
+        $company = $this->faker->randomElement($companies);
+        
         return [
             'id' => Str::uuid(),
-            'name' => $this->faker->company,
+            'name' => $company['name'],
             'address' => $this->faker->address,
-            'industry' => $this->faker->randomElement(['Technology', 'Finance', 'Healthcare', 'Manufacturing', 'Retail']),
-            'website' => $this->faker->url,
+            'industry' => $company['industry'],
+            'website' => 'https://www.' . Str::slug($company['name']) . '.com',
             'ownerId' => null,  // To be set dynamically in the seeder
         ];
     }

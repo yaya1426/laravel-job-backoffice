@@ -15,10 +15,11 @@ class JobVacancyCreateRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location' => 'required|string|max:255',
-            'type' => 'required|in:full-time,part-time,remote',
+            'type' => 'required|in:Full-time,Contract,Remote,Hybrid',
             'salary' => 'required|numeric|min:0',
-            'companyId' => 'required',
-            'categoryId' => 'required',
+            'companyId' => 'required|exists:companies,id',
+            'categoryId' => 'required|exists:job_categories,id',
+            'required_skills' => 'required|string',
         ];
     }
 
@@ -35,7 +36,10 @@ class JobVacancyCreateRequest extends FormRequest
             'salary.required' => 'Salary is required.',
             'salary.numeric' => 'Salary must be a valid number.',
             'companyId.required' => 'A company must be associated with the job vacancy.',
+            'companyId.exists' => 'The selected company is invalid.',
             'categoryId.required' => 'A job category must be selected.',
+            'categoryId.exists' => 'The selected job category is invalid.',
+            'required_skills.required' => 'Required skills must be specified.',
         ];
     }
 }

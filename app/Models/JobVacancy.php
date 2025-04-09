@@ -47,6 +47,7 @@ class JobVacancy extends Model
         'view_count',
         'companyId',
         'categoryId',
+        'required_skills',
     ];
 
     protected $dates = ['deleted_at'];

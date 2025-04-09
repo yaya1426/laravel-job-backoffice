@@ -8,6 +8,7 @@ use App\Models\JobCategory;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -36,6 +37,11 @@ class CategoryController extends Controller
      */
     public function create()
     {
+        // Only admin can create categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             return view('category.create');
         } catch (Exception $e) {
@@ -48,6 +54,11 @@ class CategoryController extends Controller
      */
     public function store(CategoryCreateRequest $request)
     {
+        // Only admin can store categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             JobCategory::create([
                 'name' => $request->input('name'),
@@ -66,6 +77,11 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
+        // Only admin can view individual categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $category = JobCategory::findOrFail($id);
             return view('category.show', compact('category'));
@@ -79,6 +95,11 @@ class CategoryController extends Controller
      */
     public function edit(string $id)
     {
+        // Only admin can edit categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $category = JobCategory::findOrFail($id);
             return view('category.edit', compact('category'));
@@ -92,6 +113,11 @@ class CategoryController extends Controller
      */
     public function update(CategoryUpdateRequest $request, string $id)
     {
+        // Only admin can update categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $category = JobCategory::findOrFail($id);
             $category->update([
@@ -116,6 +142,11 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
+        // Only admin can delete categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $category = JobCategory::findOrFail($id);
             $category->delete();
@@ -133,6 +164,11 @@ class CategoryController extends Controller
      */
     public function restore(string $id)
     {
+        // Only admin can restore categories
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
             $category = JobCategory::onlyTrashed()->findOrFail($id);
             $category->restore();

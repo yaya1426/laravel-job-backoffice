@@ -9,6 +9,7 @@ use App\Models\JobVacancy;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ApplicationController extends Controller
 {
@@ -19,6 +20,13 @@ class ApplicationController extends Controller
     {
         try {
             $query = JobApplication::latest()->with(['user', 'jobVacancy']);
+
+            // If user is company owner, only show applications for their company
+            if (Auth::user()->role === 'company-owner') {
+                $query->whereHas('jobVacancy.company', function($q) {
+                    $q->where('ownerId', Auth::id());
+                });
+            }
 
             // Filter by active/archived status
             if ($request->input('archived') === 'true') {
@@ -38,7 +46,14 @@ class ApplicationController extends Controller
     public function show(string $id)
     {
         try {
-            $application = JobApplication::with(['user', 'jobVacancy'])->findOrFail($id);
+            $application = JobApplication::with(['user', 'jobVacancy.company'])->findOrFail($id);
+
+            // Check if user has access to this application
+            if (Auth::user()->role === 'company-owner' &&
+                $application->jobVacancy->company->ownerId !== Auth::id()) {
+                abort(403, 'Unauthorized action.');
+            }
+
             return view('application.show', compact('application'));
         } catch (Exception $e) {
             return redirect()->route('application.index')->with('error', 'Application not found or an error occurred.');
@@ -51,9 +66,21 @@ class ApplicationController extends Controller
     public function edit(string $id)
     {
         try {
-            $application = JobApplication::findOrFail($id);
+            $application = JobApplication::with(['jobVacancy.company'])->findOrFail($id);
+
+            // Check if user has access to this application
+            if (Auth::user()->role === 'company-owner' &&
+                $application->jobVacancy->company->ownerId !== Auth::id()) {
+                abort(403, 'Unauthorized action.');
+            }
+
             $users = User::where('role', 'job-seeker')->get();
-            $jobs = JobVacancy::all();
+            $jobs = JobVacancy::when(Auth::user()->role === 'company-owner', function($query) {
+                $query->whereHas('company', function($q) {
+                    $q->where('ownerId', Auth::id());
+                });
+            })->get();
+
             return view('application.edit', compact('application', 'users', 'jobs'));
         } catch (Exception $e) {
             return redirect()->route('application.index')->with('error', 'Application not found or an error occurred.');
@@ -66,7 +93,14 @@ class ApplicationController extends Controller
     public function update(ApplicationUpdateRequest $request, string $id)
     {
         try {
-            $application = JobApplication::findOrFail($id);
+            $application = JobApplication::with(['jobVacancy.company'])->findOrFail($id);
+
+            // Check if user has access to this application
+            if (Auth::user()->role === 'company-owner' &&
+                $application->jobVacancy->company->ownerId !== Auth::id()) {
+                abort(403, 'Unauthorized action.');
+            }
+
             $application->update([
                 'status' => $request->input('status'),
             ]);
@@ -90,6 +124,11 @@ class ApplicationController extends Controller
     public function destroy(string $id)
     {
         try {
+            // Check if user is admin
+            if (Auth::user()->role !== 'admin') {
+                abort(403, 'Unauthorized action.');
+            }
+
             $application = JobApplication::findOrFail($id);
             $application->delete();
 
@@ -107,6 +146,11 @@ class ApplicationController extends Controller
     public function restore(string $id)
     {
         try {
+            // Check if user is admin
+            if (Auth::user()->role !== 'admin') {
+                abort(403, 'Unauthorized action.');
+            }
+
             $application = JobApplication::onlyTrashed()->findOrFail($id);
             $application->restore();
 

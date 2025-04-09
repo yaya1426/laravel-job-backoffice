@@ -40,22 +40,22 @@
                     <tr class="border-b">
                         <td class="px-6 py-4 text-gray-800">
                             @if(request('archived') === 'true')
-                                <span class="text-gray-600">{{ $application->user->name }}</span>
+                                <span class="text-gray-600">{{ $application->user?->name ?? 'User Deleted' }}</span>
                             @else
                                 <a href="{{ route('application.show', $application->id) }}"
                                     class="text-blue-500 underline hover:text-blue-700">
-                                    {{ $application->user->name }}
+                                    {{ $application->user?->name ?? 'User Deleted' }}
                                 </a>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy->title }}</td>
-                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy->company->name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy?->title ?? 'Position Deleted' }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ $application->jobVacancy?->company?->name ?? 'Company Deleted' }}</td>
                         <td class="px-6 py-4 text-gray-600">
                             <span class="
-                                                @if($application->status === 'pending') text-yellow-600 
-                                                @elseif($application->status === 'interviewed') text-blue-600 
-                                                @elseif($application->status === 'rejected') text-red-600 
-                                                @elseif($application->status === 'hired') text-green-600 
+                                                @if($application->status === 'pending') text-yellow-600
+                                                @elseif($application->status === 'interviewed') text-blue-600
+                                                @elseif($application->status === 'rejected') text-red-600
+                                                @elseif($application->status === 'hired') text-green-600
                                                 @endif">
                                 {{ ucfirst($application->status) }}
                             </span>

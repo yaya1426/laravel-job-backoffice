@@ -11,6 +11,8 @@ use App\Models\JobCategory;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class JobVacancyController extends Controller
 {
@@ -21,6 +23,13 @@ class JobVacancyController extends Controller
     {
         try {
             $query = JobVacancy::latest();
+
+            // If user is company owner, only show their company's job vacancies
+            if (Auth::user()->role === 'company-owner') {
+                $query->whereHas('company', function ($q) {
+                    $q->where('ownerId', Auth::id());
+                });
+            }
 
             // Filter by active/archived status
             if ($request->input('archived') === 'true') {
@@ -40,7 +49,12 @@ class JobVacancyController extends Controller
     public function create()
     {
         try {
-            $companies = Company::all();
+            // If user is company owner, only show their company
+            if (Auth::user()->role === 'company-owner') {
+                $companies = Company::where('ownerId', Auth::id())->get();
+            } else {
+                $companies = Company::all();
+            }
             $categories = JobCategory::all();
             return view('job-vacancy.create', compact('companies', 'categories'));
         } catch (Exception $e) {
@@ -54,7 +68,18 @@ class JobVacancyController extends Controller
     public function store(JobVacancyCreateRequest $request)
     {
         try {
-            JobVacancy::create([
+            // If user is company owner, verify they own the company
+            if (Auth::user()->role === 'company-owner') {
+                $company = Company::findOrFail($request->input('companyId'));
+                if ($company->ownerId !== Auth::id()) {
+                    return redirect()->route('job-vacancy.index')->with('error', 'You can only create job vacancies for your own company.');
+                }
+            }
+
+            // Log the request data for debugging
+            Log::info('Creating job vacancy with data:', $request->all());
+
+            $jobVacancy = JobVacancy::create([
                 'title' => $request->input('title'),
                 'description' => $request->input('description'),
                 'location' => $request->input('location'),
@@ -62,13 +87,22 @@ class JobVacancyController extends Controller
                 'salary' => $request->input('salary'),
                 'companyId' => $request->input('companyId'),
                 'categoryId' => $request->input('categoryId'),
+                'required_skills' => $request->input('required_skills'),
             ]);
 
             return redirect()->route('job-vacancy.index')->with('success', 'Job vacancy created successfully.');
         } catch (QueryException $e) {
-            return redirect()->route('job-vacancy.index')->with('error', 'An error occurred while creating the job vacancy.');
+            Log::error('Job Vacancy Creation Error: ' . $e->getMessage());
+            Log::error('Error Code: ' . $e->getCode());
+            return redirect()->route('job-vacancy.index')
+                ->with('error', 'An error occurred while creating the job vacancy. Error: ' . $e->getMessage())
+                ->withInput();
         } catch (Exception $e) {
-            return redirect()->route('job-vacancy.index')->with('error', 'An unexpected error occurred.');
+            Log::error('Job Vacancy Creation Error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->route('job-vacancy.index')
+                ->with('error', 'An unexpected error occurred. Error: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -77,13 +111,14 @@ class JobVacancyController extends Controller
      */
     public function show(string $id)
     {
-        // try {
         $jobVacancy = JobVacancy::with('company', 'jobCategory', 'jobApplications')->findOrFail($id);
 
+        // If user is company owner, verify they own the company
+        if (Auth::user()->role === 'company-owner' && $jobVacancy->company->ownerId !== Auth::id()) {
+            return redirect()->route('job-vacancy.index')->with('error', 'You can only view job vacancies for your own company.');
+        }
+
         return view('job-vacancy.show', compact('jobVacancy'));
-        // } catch (Exception $e) {
-        //     return redirect()->route('job-vacancy.index')->with('error', 'Job vacancy not found.');
-        // }
     }
 
     /**
@@ -93,7 +128,18 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
-            $companies = Company::all();
+
+            // If user is company owner, verify they own the company
+            if (Auth::user()->role === 'company-owner' && $jobVacancy->company->ownerId !== Auth::id()) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You can only edit job vacancies for your own company.');
+            }
+
+            // If user is company owner, only show their company
+            if (Auth::user()->role === 'company-owner') {
+                $companies = Company::where('ownerId', Auth::id())->get();
+            } else {
+                $companies = Company::all();
+            }
             $categories = JobCategory::all();
             return view('job-vacancy.edit', compact('jobVacancy', 'companies', 'categories'));
         } catch (Exception $e) {
@@ -108,6 +154,12 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
+
+            // If user is company owner, verify they own the company
+            if (Auth::user()->role === 'company-owner' && $jobVacancy->company->ownerId !== Auth::id()) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You can only update job vacancies for your own company.');
+            }
+
             $jobVacancy->update([
                 'title' => $request->input('title'),
                 'description' => $request->input('description'),
@@ -116,6 +168,7 @@ class JobVacancyController extends Controller
                 'salary' => $request->input('salary'),
                 'companyId' => $request->input('companyId'),
                 'categoryId' => $request->input('categoryId'),
+                'required_skills' => $request->input('required_skills'),
             ]);
 
             if ($request->query('redirectToList') == 'false') {
@@ -138,6 +191,12 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
+
+            // If user is company owner, verify they own the company
+            if (Auth::user()->role === 'company-owner' && $jobVacancy->company->ownerId !== Auth::id()) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You can only archive job vacancies for your own company.');
+            }
+
             $jobVacancy->delete();
 
             return redirect()->route('job-vacancy.index')->with('success', 'Job vacancy archived successfully.');
@@ -153,6 +212,12 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::onlyTrashed()->findOrFail($id);
+
+            // If user is company owner, verify they own the company
+            if (Auth::user()->role === 'company-owner' && $jobVacancy->company->ownerId !== Auth::id()) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You can only restore job vacancies for your own company.');
+            }
+
             $jobVacancy->restore();
 
             return redirect()->route('job-vacancy.index', ['archived' => 'true'])->with('success', 'Job vacancy restored successfully.');

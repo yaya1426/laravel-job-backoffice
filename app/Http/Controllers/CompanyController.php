@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class CompanyController extends Controller
 {
@@ -21,6 +22,11 @@ class CompanyController extends Controller
     {
         try {
             $query = Company::latest();
+
+            // If user is company owner, only show their company
+            if (Auth::user()->role === 'company-owner') {
+                $query->where('ownerId', Auth::id());
+            }
 
             // Filter by active/archived status
             if ($request->input('archived') === 'true') {
@@ -39,6 +45,11 @@ class CompanyController extends Controller
      */
     public function create()
     {
+        // Only admin can create companies
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('company.index')->with('error', 'You do not have permission to create companies.');
+        }
+
         try {
             $industries = [
                 'Technology',
@@ -174,6 +185,11 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
+        // Only admin can archive companies
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('company.index')->with('error', 'You do not have permission to archive companies.');
+        }
+
         try {
             $company = Company::findOrFail($id);
             $company->delete();
@@ -188,9 +204,14 @@ class CompanyController extends Controller
 
     public function restore(string $id)
     {
+        // Only admin can restore companies
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('company.index')->with('error', 'You do not have permission to restore companies.');
+        }
+
         try {
             $company = Company::onlyTrashed()->findOrFail($id);
-            $company->restore(); // Restore the company
+            $company->restore();
 
             return redirect()->route('company.index', ['archived' => 'true'])->with('success', 'Company restored successfully.');
         } catch (Exception $e) {

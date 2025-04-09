@@ -16,15 +16,17 @@
                     Active Companies
                 </a>
 
-                <!-- Archived Companies Tab -->
-                <a href="{{ route('company.index', ['archived' => 'true']) }}"
-                    class="px-4 py-2 rounded-lg {{ request('archived') === 'true' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
-                    Archived
-                </a>
+                <!-- Archived Companies Tab - Only visible to admin -->
+                @if(auth()->user()->role === 'admin')
+                    <a href="{{ route('company.index', ['archived' => 'true']) }}"
+                        class="px-4 py-2 rounded-lg {{ request('archived') === 'true' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                        Archived
+                    </a>
+                @endif
             </div>
 
-            <!-- Add Company Button -->
-            @if(request('archived') !== 'true')
+            <!-- Add Company Button - Only visible to admin -->
+            @if(auth()->user()->role === 'admin' && request('archived') !== 'true')
                 <a href="{{ route('company.create') }}"
                     class="items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800">
                     <span class="text-xl">+</span> Add Company
@@ -73,24 +75,30 @@
                         <td class="px-6 py-4">
                             <div class="flex space-x-2">
                                 @if(request('archived') === 'true')
-                                    <!-- Restore Button -->
-                                    <form action="{{ route('company.restore', $company->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🔄
-                                            Restore</button>
-                                    </form>
+                                    <!-- Restore Button - Only visible to admin -->
+                                    @if(auth()->user()->role === 'admin')
+                                        <form action="{{ route('company.restore', $company->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🔄
+                                                Restore</button>
+                                        </form>
+                                    @endif
                                 @else
-                                    <!-- Edit Button -->
-                                    <a href="{{ route('company.edit', $company->id) }}"
-                                        class="p-2 bg-gray-100 rounded hover:bg-gray-200">✏️</a>
+                                    <!-- Edit Button - Only visible to company owner for their own company or admin -->
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'company-owner' && $company->ownerId === auth()->id()))
+                                        <a href="{{ route('company.edit', $company->id) }}"
+                                            class="p-2 bg-gray-100 rounded hover:bg-gray-200">✏️</a>
+                                    @endif
 
-                                    <!-- Archive Button -->
-                                    <form action="{{ route('company.destroy', $company->id) }}" method="POST"
-                                        onsubmit="return confirm('Are you sure you want to archive this company?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🗃️</button>
-                                    </form>
+                                    <!-- Archive Button - Only visible to admin -->
+                                    @if(auth()->user()->role === 'admin')
+                                        <form action="{{ route('company.destroy', $company->id) }}" method="POST"
+                                            onsubmit="return confirm('Are you sure you want to archive this company?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🗃️</button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>

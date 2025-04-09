@@ -66,23 +66,29 @@
                             <div class="flex space-x-2">
                                 @if(request('archived') === 'true')
                                     <!-- Restore Button -->
-                                    <form action="{{ route('job-vacancy.restore', $job->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🔄
-                                            Restore</button>
-                                    </form>
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'company-owner' && $job->company->ownerId === auth()->id()))
+                                        <form action="{{ route('job-vacancy.restore', $job->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🔄
+                                                Restore</button>
+                                        </form>
+                                    @endif
                                 @else
                                     <!-- Edit Button -->
-                                    <a href="{{ route('job-vacancy.edit', $job->id) }}"
-                                        class="p-2 bg-gray-100 rounded hover:bg-gray-200">✏️</a>
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'company-owner' && $job->company->ownerId === auth()->id()))
+                                        <a href="{{ route('job-vacancy.edit', $job->id) }}"
+                                            class="p-2 bg-gray-100 rounded hover:bg-gray-200">✏️</a>
+                                    @endif
 
                                     <!-- Archive Button -->
-                                    <form action="{{ route('job-vacancy.destroy', $job->id) }}" method="POST"
-                                        onsubmit="return confirm('Are you sure you want to archive this job vacancy?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🗃️</button>
-                                    </form>
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'company-owner' && $job->company->ownerId === auth()->id()))
+                                        <form action="{{ route('job-vacancy.destroy', $job->id) }}" method="POST"
+                                            onsubmit="return confirm('Are you sure you want to archive this job vacancy?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 bg-gray-100 rounded hover:bg-gray-200">🗃️</button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>

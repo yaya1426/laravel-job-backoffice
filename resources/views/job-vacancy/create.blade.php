@@ -118,6 +118,19 @@
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
                     </div>
+
+                    <!-- Required Skills -->
+                    <div class="mb-4">
+                        <label for="required_skills" class="block text-sm font-medium text-gray-900">Required Skills</label>
+                        <div class="mt-2">
+                            <textarea name="required_skills" id="required_skills" rows="3"
+                                class="{{ $errors->has('required_skills') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400"
+                                placeholder="Enter required skills, separated by commas">{{ old('required_skills') }}</textarea>
+                        </div>
+                        @error('required_skills')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Submit Button -->

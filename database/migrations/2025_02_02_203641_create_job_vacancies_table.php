@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->string('location'); // Job location
             $table->enum('type', ['Full-time', 'Contract', 'Remote', 'Hybrid'])->default('Full-time'); // Job type
             $table->decimal('salary', 10, 2); // Salary with precision and scale
-            $table->text('required_skills'); // Required skills for the job
 
             // Timestamps
             $table->timestamps();

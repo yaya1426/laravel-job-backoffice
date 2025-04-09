@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('job_vacancies', function (Blueprint $table) {
-            $table->integer('view_count')->default(0)->after('required_skills');
+            $table->integer('view_count')->default(0);
         });
 
         Schema::table('users', function (Blueprint $table) {

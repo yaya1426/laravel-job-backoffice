@@ -4,9 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\JobVacancy;
+use App\Models\JobApplication;
 use App\Models\JobCategory;
+use App\Models\Resume;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -18,19 +21,22 @@ class DatabaseSeeder extends Seeder
     {
         // Load job data
         $jobData = json_decode(file_get_contents(database_path('data/job_data.json')), true);
+        
+        // Load job applications data
+        $jobApplicationsData = json_decode(file_get_contents(database_path('data/job_applications.json')), true);
 
-        // Check if the root admin user already exists
+        // Create admin user
         User::firstOrCreate(
             ['email' => 'admin@shaghal.com'],
             [
                 'id' => Str::uuid(),
                 'name' => 'Root Admin',
-                'password' => bcrypt('123123'),
+                'password' => Hash::make('123123'),
                 'role' => 'admin'
             ]
         );
 
-        // Seed job categories
+        // Create job categories
         foreach ($jobData['jobCategories'] as $categoryName) {
             JobCategory::firstOrCreate(
                 ['name' => $categoryName],
@@ -38,31 +44,100 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Create company owners (one for each company in our JSON data)
-        $owners = collect();
-        foreach ($jobData['companies'] as $companyData) {
-            $owner = User::factory()->create([
-                'role' => 'company-owner',
-                'name' => 'Owner of ' . $companyData['name'],
-            ]);
-            $owners->push($owner);
+        // Create companies
+        foreach ($jobData['companies'] as $company) {
+            // Create company owner
+            $owner = User::firstOrCreate(
+                ['email' => fake()->unique()->safeEmail()],
+                [
+                    'id' => Str::uuid(),
+                    'role' => 'company-owner',
+                    'name' => fake()->name(),
+                    'password' => Hash::make('123123')
+                ]
+            );
+
+            // Create company
+            Company::firstOrCreate(
+                ['name' => $company['name']],
+                [
+                    'id' => Str::uuid(), 
+                    'ownerId' => $owner->id,
+                    'address' => $company['address'],
+                    'industry' => $company['industry'],
+                    'website' => $company['website']
+                ]
+            );
         }
 
-        // Create companies and assign to owners
-        $owners->each(function ($owner, $index) use ($jobData) {
-            $company = Company::factory()->create([
-                'name' => $jobData['companies'][$index]['name'],
-                'industry' => $jobData['companies'][$index]['industry'],
-                'website' => 'https://www.' . Str::slug($jobData['companies'][$index]['name']) . '.com',
-                'ownerId' => $owner->id,
+        // Create job vacancies
+        foreach ($jobData['jobVacancies'] as $jobVacancy) {
+            // Find the company
+            $company = Company::where('name', $jobVacancy['company'])->first();
+            
+            // Find the category
+            $category = JobCategory::where('name', $jobVacancy['category'])->first();
+            
+            if ($company && $category) {
+                JobVacancy::firstOrCreate(
+                    [
+                        'title' => $jobVacancy['title'],
+                        'companyId' => $company->id
+                    ],
+                    [
+                        'id' => Str::uuid(),
+                        'description' => $jobVacancy['description'],
+                        'location' => $jobVacancy['location'],
+                        'type' => $jobVacancy['type'],
+                        'salary' => $jobVacancy['salary'],
+                        'categoryId' => $category->id,
+                        'view_count' => 0 // Don't forget to add this later, not in the Seeders video ya Yahya
+                    ]
+                );
+            }
+        }
+
+        // Create job applications with resumes
+        foreach ($jobApplicationsData['jobApplications'] as $jobApplication) {
+            // Create a user for the applicant
+            $applicant = User::firstOrCreate(
+                ['email' => fake()->unique()->safeEmail()],
+                [
+                    'id' => Str::uuid(),
+                    'role' => 'job-seeker',
+                    'name' => fake()->name(),
+                    'password' => Hash::make('123123')
+                ]
+            );
+
+            // Create a resume for the applicant
+            $resume = Resume::create([
+                'id' => Str::uuid(),
+                'filename' => $jobApplication['resume']['filename'],
+                'fileUri' => $jobApplication['resume']['fileUri'],
+                'contactDetails' => $jobApplication['resume']['contactDetails'],
+                'summary' => $jobApplication['resume']['summary'],
+                'skills' => $jobApplication['resume']['skills'],
+                'experience' => $jobApplication['resume']['experience'],
+                'education' => $jobApplication['resume']['education'],
+                'userId' => $applicant->id
             ]);
 
-            // Create 5 job vacancies for each company
-            $categories = JobCategory::all();
-            JobVacancy::factory(5)->create([
-                'companyId' => $company->id,
-                'categoryId' => fn() => $categories->random()->id,
-            ]);
-        });
+            // Get a random job vacancy
+            $jobVacancy = JobVacancy::inRandomOrder()->first();
+
+            if ($jobVacancy) {
+                // Create the job application
+                JobApplication::create([
+                    'id' => Str::uuid(),
+                    'status' => $jobApplication['status'],
+                    'aiGeneratedScore' => $jobApplication['aiGeneratedScore'],
+                    'aiGeneratedFeedback' => $jobApplication['aiGeneratedFeedback'],
+                    'jobId' => $jobVacancy->id,
+                    'resumeId' => $resume->id,
+                    'userId' => $applicant->id
+                ]);
+            }
+        }
     }
 }

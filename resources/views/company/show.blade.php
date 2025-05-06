@@ -9,18 +9,27 @@
         <x-toast-notification />
         <!-- Back Button -->
         <div class="mb-4">
+            @if (auth()->user()->role === 'admin')
             <a href="{{ route('company.index') }}"
                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
                 ← Back
             </a>
+            @else
+            <a href="{{ route('dashboard') }}"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                ← Back to Dashboard
+            </a>
+            @endif
         </div>
 
         <div class="w-full mx-auto p-6 bg-white rounded-lg shadow">
             <!-- Company Details -->
             <div class="mb-6">
                 <h3 class="text-lg font-bold">Company Information</h3>
+                <p><strong>Name:</strong> {{ $company->name }}</p>
                 <p><strong>Industry:</strong> {{ $company->industry }}</p>
                 <p><strong>Address:</strong> {{ $company->address }}</p>
+                <p><strong>Owner:</strong> {{ $company->owner->name }} ({{ $company->owner->email }})</p>
                 <p><strong>Website:</strong>
                     @if ($company->website)
                         <a href="{{ $company->website }}" target="_blank" class="text-blue-500 underline">Visit Website</a>
@@ -32,6 +41,7 @@
 
             <!-- Edit and Delete Buttons -->
             <div class="flex justify-end space-x-2 mb-6">
+                @if (auth()->user()->role === 'admin')
                 <a href="{{ route('company.edit', ['company' => $company->id, 'redirectToList' => 'false']) }}"
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Edit
@@ -44,8 +54,15 @@
                         Archive
                     </button>
                 </form>
+                @else
+                <a href="{{ route('company-owner.company.edit') }}"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Edit
+                </a>
+                @endif
             </div>
 
+            @if (auth()->user()->role === 'admin')
             <!-- Tabs Navigation -->
             <div class="mb-6">
                 <ul class="flex space-x-4">
@@ -129,6 +146,7 @@
                         </tbody>
                     </table>
                 </div>
+            @endif
             @endif
         </div>
     </div>

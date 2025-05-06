@@ -22,6 +22,11 @@ class JobVacancyController extends Controller
         try {
             $query = JobVacancy::latest();
 
+            // If user is company owner, only show their company's vacancies
+            if (auth()->user()->role === 'company-owner') {
+                $query->where('companyId', auth()->user()->company->id);
+            }
+
             // Filter by active/archived status
             if ($request->input('archived') === 'true') {
                 $query->onlyTrashed();
@@ -40,7 +45,13 @@ class JobVacancyController extends Controller
     public function create()
     {
         try {
-            $companies = Company::all();
+            // If user is company owner, only show their company
+            if (auth()->user()->role === 'company-owner') {
+                $companies = Company::where('id', auth()->user()->company->id)->get();
+            } else {
+                $companies = Company::all();
+            }
+            
             $categories = JobCategory::all();
             return view('job-vacancy.create', compact('companies', 'categories'));
         } catch (Exception $e) {
@@ -54,13 +65,18 @@ class JobVacancyController extends Controller
     public function store(JobVacancyCreateRequest $request)
     {
         try {
+            // If user is company owner, force their company ID
+            $companyId = auth()->user()->role === 'company-owner' 
+                ? auth()->user()->company->id 
+                : $request->input('companyId');
+
             JobVacancy::create([
                 'title' => $request->input('title'),
                 'description' => $request->input('description'),
                 'location' => $request->input('location'),
                 'type' => $request->input('type'),
                 'salary' => $request->input('salary'),
-                'companyId' => $request->input('companyId'),
+                'companyId' => $companyId,
                 'categoryId' => $request->input('categoryId'),
             ]);
 
@@ -77,13 +93,18 @@ class JobVacancyController extends Controller
      */
     public function show(string $id)
     {
-        // try {
-        $jobVacancy = JobVacancy::with('company', 'jobCategory', 'jobApplications')->findOrFail($id);
+        try {
+            $jobVacancy = JobVacancy::with('company', 'jobCategory', 'jobApplications')->findOrFail($id);
+            
+            // Check if user is company owner and has access to this vacancy
+            if (auth()->user()->role === 'company-owner' && $jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You do not have permission to view this job vacancy.');
+            }
 
-        return view('job-vacancy.show', compact('jobVacancy'));
-        // } catch (Exception $e) {
-        //     return redirect()->route('job-vacancy.index')->with('error', 'Job vacancy not found.');
-        // }
+            return view('job-vacancy.show', compact('jobVacancy'));
+        } catch (Exception $e) {
+            return redirect()->route('job-vacancy.index')->with('error', 'Job vacancy not found.');
+        }
     }
 
     /**
@@ -93,7 +114,19 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
-            $companies = Company::all();
+            
+            // Check if user is company owner and has access to this vacancy
+            if (auth()->user()->role === 'company-owner' && $jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You do not have permission to edit this job vacancy.');
+            }
+
+            // If user is company owner, only show their company
+            if (auth()->user()->role === 'company-owner') {
+                $companies = Company::where('id', auth()->user()->company->id)->get();
+            } else {
+                $companies = Company::all();
+            }
+            
             $categories = JobCategory::all();
             return view('job-vacancy.edit', compact('jobVacancy', 'companies', 'categories'));
         } catch (Exception $e) {
@@ -108,13 +141,24 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
+            
+            // Check if user is company owner and has access to this vacancy
+            if (auth()->user()->role === 'company-owner' && $jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You do not have permission to update this job vacancy.');
+            }
+
+            // If user is company owner, force their company ID
+            $companyId = auth()->user()->role === 'company-owner' 
+                ? auth()->user()->company->id 
+                : $request->input('companyId');
+
             $jobVacancy->update([
                 'title' => $request->input('title'),
                 'description' => $request->input('description'),
                 'location' => $request->input('location'),
                 'type' => $request->input('type'),
                 'salary' => $request->input('salary'),
-                'companyId' => $request->input('companyId'),
+                'companyId' => $companyId,
                 'categoryId' => $request->input('categoryId'),
             ]);
 
@@ -138,6 +182,12 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::findOrFail($id);
+            
+            // Check if user is company owner and has access to this vacancy
+            if (auth()->user()->role === 'company-owner' && $jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You do not have permission to delete this job vacancy.');
+            }
+
             $jobVacancy->delete();
 
             return redirect()->route('job-vacancy.index')->with('success', 'Job vacancy archived successfully.');
@@ -153,6 +203,12 @@ class JobVacancyController extends Controller
     {
         try {
             $jobVacancy = JobVacancy::onlyTrashed()->findOrFail($id);
+            
+            // Check if user is company owner and has access to this vacancy
+            if (auth()->user()->role === 'company-owner' && $jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('job-vacancy.index')->with('error', 'You do not have permission to restore this job vacancy.');
+            }
+
             $jobVacancy->restore();
 
             return redirect()->route('job-vacancy.index', ['archived' => 'true'])->with('success', 'Job vacancy restored successfully.');

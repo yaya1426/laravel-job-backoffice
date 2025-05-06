@@ -30,7 +30,7 @@ class CompanyController extends Controller
             $companies = $query->paginate(10)->onEachSide(1);
             return view('company.index', compact('companies'));
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'An error occurred while fetching companies.');
+            return redirect()->route('dashboard')->with('error', 'An error occurred while fetching companies.');
         }
     }
 
@@ -54,7 +54,7 @@ class CompanyController extends Controller
             ];
             return view('company.create', compact('industries'));
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'An error occurred while loading the form.');
+            return redirect()->route('dashboard')->with('error', 'An error occurred while loading the form.');
         }
     }
 
@@ -92,10 +92,24 @@ class CompanyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id = null)
     {
         try {
-            $company = Company::findOrFail($id);  // Find the company or throw 404
+            // For company owner accessing /my-company
+            if (auth()->user()->role === 'company-owner' && !$id) {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account.');
+                }
+                $id = $company->id;
+            }
+
+            $company = Company::findOrFail($id);
+
+            // Check if company owner is accessing their own company
+            if (auth()->user()->role === 'company-owner' && $company->ownerId !== auth()->user()->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to view this company.');
+            }
 
             $applicants = JobApplication::with('user', 'jobVacancy')
                 ->whereIn('jobId', $company->jobVacancies->pluck('id'))
@@ -103,16 +117,32 @@ class CompanyController extends Controller
 
             return view('company.show', compact('company', 'applicants'));
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'Company not found or an error occurred.');
+            return redirect()->route('dashboard')->with('error', 'Company not found or an error occurred.');
         }
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id = null)
     {
         try {
+            // For company owner accessing /my-company/edit
+            if (auth()->user()->role === 'company-owner' && !$id) {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account.');
+                }
+                $id = $company->id;
+            }
+
+            $company = Company::findOrFail($id);
+
+            // Check if company owner is accessing their own company
+            if (auth()->user()->role === 'company-owner' && $company->ownerId !== auth()->user()->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to edit this company.');
+            }
+
             $industries = [
                 'Technology',
                 'Finance',
@@ -125,21 +155,35 @@ class CompanyController extends Controller
                 'Entertainment',
                 'Transportation'
             ];
-            $company = Company::findOrFail($id);
+            
             return view('company.edit', compact('company', 'industries'));
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'Company not found or an error occurred.');
+            return redirect()->route('dashboard')->with('error', 'Company not found or an error occurred.');
         }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(CompanyUpdateRequest $request, string $id)
+    public function update(CompanyUpdateRequest $request, string $id = null)
     {
         try {
-            // Find the company and update its details
+            // For company owner accessing /my-company
+            if (auth()->user()->role === 'company-owner' && !$id) {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account.');
+                }
+                $id = $company->id;
+            }
+
             $company = Company::findOrFail($id);
+
+            // Check if company owner is accessing their own company
+            if (auth()->user()->role === 'company-owner' && $company->ownerId !== auth()->user()->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to update this company.');
+            }
+
             $company->update([
                 'name' => $request->input('name'),
                 'address' => $request->input('address'),
@@ -154,18 +198,18 @@ class CompanyController extends Controller
                 ]);
             }
 
-            print_r($request->query('redirectToList'));
-
-            if ($request->query('redirectToList') == 'false') {
-                return redirect()->route('company.show', ['company' => $company->id])
+            if ($request->query('redirectToList') == 'false' || auth()->user()->role === 'company-owner') {
+                $route = auth()->user()->role === 'company-owner' 
+                    ? 'company-owner.company.show'
+                    : 'company.show';
+                
+                return redirect()->route($route, auth()->user()->role === 'company-owner' ? [] : ['company' => $company->id])
                     ->with('success', 'Company updated successfully.');
             }
 
             return redirect()->route('company.index')->with('success', 'Company updated successfully.');
-        } catch (QueryException $e) {
-            return redirect()->route('company.index')->with('error', 'An error occurred while updating the company.');
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'An unexpected error occurred.');
+            return redirect()->route('dashboard')->with('error', 'An unexpected error occurred.');
         }
     }
 
@@ -179,22 +223,23 @@ class CompanyController extends Controller
             $company->delete();
 
             return redirect()->route('company.index')->with('success', 'Company archived successfully.');
-        } catch (QueryException $e) {
-            return redirect()->route('company.index')->with('error', 'An error occurred while archiving the company.');
         } catch (Exception $e) {
             return redirect()->route('company.index')->with('error', 'An unexpected error occurred.');
         }
     }
 
+    /**
+     * Restore the specified resource from storage.
+     */
     public function restore(string $id)
     {
         try {
             $company = Company::onlyTrashed()->findOrFail($id);
-            $company->restore(); // Restore the company
+            $company->restore();
 
             return redirect()->route('company.index', ['archived' => 'true'])->with('success', 'Company restored successfully.');
         } catch (Exception $e) {
-            return redirect()->route('company.index')->with('error', 'An error occurred while restoring the company.');
+            return redirect()->route('company.index')->with('error', 'An unexpected error occurred.');
         }
     }
 }

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -64,8 +65,17 @@ class User extends Authenticatable
             'deleted_at' => 'datetime',
         ];
     }
+
     public function resumes(): HasMany
     {
         return $this->hasMany(Resume::class, 'userId');
+    }
+
+    /**
+     * Get the company owned by the user.
+     */
+    public function company(): HasOne
+    {
+        return $this->hasOne(Company::class, 'ownerId');
     }
 }

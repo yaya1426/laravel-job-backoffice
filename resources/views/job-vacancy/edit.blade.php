@@ -72,13 +72,14 @@
                         @enderror
                     </div>
 
-                    <!-- Company Selection -->
+                    <!-- Company -->
+                    @if(auth()->user()->role === 'admin')
                     <div class="mb-4">
                         <label for="companyId" class="block text-sm font-medium text-gray-900">Company</label>
                         <div class="mt-2">
                             <select name="companyId" id="companyId"
                                 class="{{ $errors->has('companyId') ? 'outline-red-500' : '' }} block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 placeholder:text-gray-400">
-                                <option value="">Select Company</option>
+                                <option value="">Select a company</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->id }}" {{ old('companyId', $jobVacancy->companyId) == $company->id ? 'selected' : '' }}>
                                         {{ $company->name }}
@@ -90,6 +91,7 @@
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
                     </div>
+                    @endif
 
                     <!-- Category Selection -->
                     <div class="mb-4">

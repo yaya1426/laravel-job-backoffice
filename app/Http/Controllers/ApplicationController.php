@@ -20,6 +20,20 @@ class ApplicationController extends Controller
         try {
             $query = JobApplication::latest()->with(['user', 'jobVacancy']);
 
+            // If user is company owner, verify they have a company and show only their applications
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                
+                // If company owner doesn't have a company associated, redirect to dashboard
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
+
+                $query->whereHas('jobVacancy', function($q) use ($company) {
+                    $q->where('companyId', $company->id);
+                });
+            }
+
             // Filter by active/archived status
             if ($request->input('archived') === 'true') {
                 $query->onlyTrashed();
@@ -28,7 +42,8 @@ class ApplicationController extends Controller
             $applications = $query->paginate(10)->onEachSide(1);
             return view('application.index', compact('applications'));
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'An error occurred while fetching applications.');
+            // Redirect to dashboard instead of creating a loop
+            return redirect()->route('dashboard')->with('error', 'An error occurred while fetching applications.');
         }
     }
 
@@ -38,10 +53,24 @@ class ApplicationController extends Controller
     public function show(string $id)
     {
         try {
+            // If user is company owner, verify they have a company
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
+            }
+
             $application = JobApplication::with(['user', 'jobVacancy'])->findOrFail($id);
+
+            // Check if user is company owner and has access to this application
+            if (auth()->user()->role === 'company-owner' && $application->jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to view this application.');
+            }
+
             return view('application.show', compact('application'));
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'Application not found or an error occurred.');
+            return redirect()->route('dashboard')->with('error', 'Application not found or an error occurred.');
         }
     }
 
@@ -51,12 +80,33 @@ class ApplicationController extends Controller
     public function edit(string $id)
     {
         try {
+            // If user is company owner, verify they have a company
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
+            }
+
             $application = JobApplication::findOrFail($id);
+
+            // Check if user is company owner and has access to this application
+            if (auth()->user()->role === 'company-owner' && $application->jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to edit this application.');
+            }
+
             $users = User::where('role', 'job-seeker')->get();
-            $jobs = JobVacancy::all();
+            
+            // If user is company owner, only show their company's job vacancies
+            if (auth()->user()->role === 'company-owner') {
+                $jobs = JobVacancy::where('companyId', auth()->user()->company->id)->get();
+            } else {
+                $jobs = JobVacancy::all();
+            }
+
             return view('application.edit', compact('application', 'users', 'jobs'));
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'Application not found or an error occurred.');
+            return redirect()->route('dashboard')->with('error', 'Application not found or an error occurred.');
         }
     }
 
@@ -66,53 +116,84 @@ class ApplicationController extends Controller
     public function update(ApplicationUpdateRequest $request, string $id)
     {
         try {
-            $application = JobApplication::findOrFail($id);
-            $application->update([
-                'status' => $request->input('status'),
-            ]);
-
-            if ($request->query('redirectToList') == 'false') {
-                return redirect()->route('application.show', ['application' => $application->id])
-                    ->with('success', 'Application updated successfully.');
+            // If user is company owner, verify they have a company
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
             }
 
+            $application = JobApplication::findOrFail($id);
+
+            // Check if user is company owner and has access to this application
+            if (auth()->user()->role === 'company-owner' && $application->jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to update this application.');
+            }
+
+            $application->update($request->validated());
+
             return redirect()->route('application.index')->with('success', 'Application updated successfully.');
-        } catch (QueryException $e) {
-            return redirect()->route('application.index')->with('error', 'An error occurred while updating the application.');
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'An unexpected error occurred.');
+            return redirect()->route('dashboard')->with('error', 'An error occurred while updating the application.');
         }
     }
 
     /**
-     * Remove the specified application (soft delete).
+     * Remove the specified application from storage (soft delete).
      */
     public function destroy(string $id)
     {
         try {
+            // If user is company owner, verify they have a company
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
+            }
+
             $application = JobApplication::findOrFail($id);
+
+            // Check if user is company owner and has access to this application
+            if (auth()->user()->role === 'company-owner' && $application->jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to delete this application.');
+            }
+
             $application->delete();
 
             return redirect()->route('application.index')->with('success', 'Application archived successfully.');
-        } catch (QueryException $e) {
-            return redirect()->route('application.index')->with('error', 'An error occurred while archiving the application.');
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'An unexpected error occurred.');
+            return redirect()->route('dashboard')->with('error', 'An error occurred while archiving the application.');
         }
     }
 
     /**
-     * Restore a soft-deleted application.
+     * Restore the specified application from storage.
      */
     public function restore(string $id)
     {
         try {
+            // If user is company owner, verify they have a company
+            if (auth()->user()->role === 'company-owner') {
+                $company = auth()->user()->company;
+                if (!$company) {
+                    return redirect()->route('dashboard')->with('error', 'No company associated with your account. Please contact an administrator.');
+                }
+            }
+
             $application = JobApplication::onlyTrashed()->findOrFail($id);
+
+            // Check if user is company owner and has access to this application
+            if (auth()->user()->role === 'company-owner' && $application->jobVacancy->companyId !== auth()->user()->company->id) {
+                return redirect()->route('dashboard')->with('error', 'You do not have permission to restore this application.');
+            }
+
             $application->restore();
 
             return redirect()->route('application.index', ['archived' => 'true'])->with('success', 'Application restored successfully.');
         } catch (Exception $e) {
-            return redirect()->route('application.index')->with('error', 'An error occurred while restoring the application.');
+            return redirect()->route('dashboard')->with('error', 'An error occurred while restoring the application.');
         }
     }
 }
